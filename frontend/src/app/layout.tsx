@@ -37,6 +37,7 @@ export default function RootLayout({
                 <a href="/equipe" className="hover:text-primary transition-colors">Équipe</a>
                 <a href="/recherche" className="hover:text-primary transition-colors">Recherche</a>
                 <a href="/blog" className="hover:text-primary transition-colors">Blog</a>
+                <a href="/patient" className="text-primary font-medium hover:text-primary-dark transition-colors">Portail Patient</a>
                 <a href="/contact" className="btn-primary text-sm">Contact</a>
               </div>
             </nav>
