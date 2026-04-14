@@ -1,0 +1,27 @@
+{
+    email admin@senbioteck.com
+    admin off
+    log {
+        format console
+    }
+}
+
+senbioteck.com {
+    reverse_proxy localhost:3000
+    encode gzip
+}
+
+api.senbioteck.com {
+    reverse_proxy localhost:3001
+    encode gzip
+}
+
+staging.senbioteck.com {
+    reverse_proxy localhost:3000
+    encode gzip
+}
+
+staging-api.senbioteck.com {
+    reverse_proxy localhost:3001
+    encode gzip
+}

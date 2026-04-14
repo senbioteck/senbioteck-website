@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEDICAL_TEAM
+  STAFF
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ResourceCategory {
+  PREVENTION
+  TREATMENT
+  REHABILITATION
+  WELLNESS
+  EMERGENCY
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String
+  role              UserRole @default(STAFF)
+  firstName         String
+  lastName          String
+  phone             String?
+  isActive          Boolean  @default(true)
+  emailNotifications Boolean @default(true)
+  consentGivenAt    DateTime?
+  consentRevokedAt  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  appointments      Appointment[]
+  emailLogs         EmailLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Patient {
+  id                String   @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String
+  phone             String?
+  dateOfBirth       DateTime?
+  gender            String?
+  address           String?
+  emergencyContact String?
+  emergencyPhone    String?
+  notes             String?
+  consentGivenAt    DateTime
+  consentRevokedAt  DateTime?
+  dataRetentionDate DateTime?
+  gdprDeletableAt   DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  appointments      Appointment[]
+
+  @@index([email])
+  @@index([lastName, firstName])
+  @@map("patients")
+}
+
+model AppointmentSlot {
+  id            String      @id @default(uuid())
+  professionalId String
+  startTime     DateTime
+  endTime       DateTime
+  status        SlotStatus  @default(AVAILABLE)
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  appointments  Appointment[]
+
+  @@index([professionalId, startTime])
+  @@index([status])
+  @@map("appointment_slots")
+}
+
+model Appointment {
+  id                String            @id @default(uuid())
+  slotId            String
+  patientId         String
+  userId            String
+  status            AppointmentStatus @default(SCHEDULED)
+  reason            String?
+  notes             String?
+  cancellationReason String?
+  scheduledAt       DateTime
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  slot              AppointmentSlot   @relation(fields: [slotId], references: [id])
+  patient           Patient           @relation(fields: [patientId], references: [id])
+  user               User              @relation(fields: [userId], references: [id])
+
+  @@index([slotId])
+  @@index([patientId])
+  @@index([userId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+model Page {
+  id          String      @id @default(uuid())
+  slug        String      @unique
+  title       String
+  body        Json
+  status      PageStatus  @default(DRAFT)
+  version     Int         @default(1)
+  authorId    String?
+  metaTitle   String?
+  metaDescription String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  publishedAt DateTime?
+  deletedAt   DateTime?
+
+  @@index([slug])
+  @@index([status])
+  @@map("pages")
+}
+
+model Category {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  blogPosts   BlogPost[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+model BlogPost {
+  id          String         @id @default(uuid())
+  title       String
+  slug        String         @unique
+  excerpt     String?
+  body        Json
+  status      BlogPostStatus @default(DRAFT)
+  authorId    String?
+  categoryId  String?
+  tags        String[]
+  featuredImageUrl String?
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  category    Category?      @relation(fields: [categoryId], references: [id])
+
+  @@index([slug])
+  @@index([status])
+  @@index([categoryId])
+  @@map("blog_posts")
+}
+
+model TeamMember {
+  id            String   @id @default(uuid())
+  firstName     String
+  lastName      String
+  role          String
+  department    String?
+  bio           String?
+  photoUrl      String?
+  email         String?
+  phone         String?
+  displayOrder  Int      @default(0)
+  isActive      Boolean  @default(true)
+  socialLinks   Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("team_members")
+}
+
+model ContactMessage {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String?
+  message     String
+  isRead      Boolean  @default(false)
+  isReplied   Boolean  @default(false)
+  repliedAt   DateTime?
+  repliedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([email])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model HealthResource {
+  id          String           @id @default(uuid())
+  title       String
+  slug        String           @unique
+  description String?
+  content     Json
+  category    ResourceCategory
+  imageUrl    String?
+  sourceUrl   String?
+  authorId    String?
+  isFeatured  Boolean          @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  @@index([slug])
+  @@index([category])
+  @@index([isFeatured])
+  @@map("health_resources")
+}
+
+model EmailLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  recipient   String
+  subject     String
+  body        String
+  status      String
+  error       String?
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([recipient])
+  @@index([userId])
+  @@index([sentAt])
+  @@map("email_logs")
+}
