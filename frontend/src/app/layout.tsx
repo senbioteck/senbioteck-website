@@ -17,6 +17,32 @@ export const metadata: Metadata = {
   },
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalOrganization',
+  name: 'Senbioteck',
+  description: 'Institut de biotechnologie et de recherche en santé. Innovations médicales, recherche biomédicale et services de santé de pointe.',
+  url: 'https://senbioteck.fr',
+  logo: 'https://senbioteck.fr/logo.png',
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '+33-1-23-45-67-89',
+    email: 'contact@senbioteck.fr',
+    contactType: 'customer service',
+    availableLanguage: 'French',
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressCountry: 'FR',
+  },
+  sameAs: [],
+  medicalSpecialty: [
+    'Biomedical Research',
+    'Medical Diagnosis',
+    'Pharmaceutical Development',
+  ],
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -25,6 +51,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <header className="border-b">
           <div className="container-page">
             <nav className="flex items-center justify-between h-16">
